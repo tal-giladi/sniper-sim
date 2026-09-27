@@ -1,0 +1,71 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #6f8fae; color: #e8ecef;
+  font: 13px/1.4 ui-monospace, "SF Mono", Consolas, monospace; user-select: none; }
+canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+#overlay { pointer-events: none; }
+.hidden { display: none !important; }
+
+.panel { position: fixed; background: rgba(8, 12, 10, 0.72); border: 1px solid rgba(160, 200, 160, 0.25);
+  padding: 8px 10px; border-radius: 4px; pointer-events: none; }
+.panel div span { display: inline-block; width: 62px; color: #8fb08f; }
+.panel i { color: #fc6; font-style: normal; margin-left: 6px; }
+.tl { top: 12px; left: 12px; }
+.tr { top: 12px; right: 12px; }
+.bl { bottom: 12px; left: 12px; }
+.br { bottom: 12px; right: 12px; max-width: 420px; }
+#report .rt { font-size: 15px; margin-bottom: 4px; }
+#report .rt span { float: right; color: #aaa; }
+#report table { border-collapse: collapse; width: 100%; }
+#report td { padding: 1px 6px 1px 0; white-space: nowrap; }
+#report td:first-child { color: #8fb08f; }
+#report tr.sep td { border-top: 1px solid rgba(255,255,255,0.15); padding-top: 4px; }
+.hit { color: #7f7; } .miss { color: #f76; }
+
+#breath { position: fixed; bottom: 16px; left: 50%; width: 180px; margin-left: -90px; height: 6px;
+  background: rgba(0,0,0,0.5); border-radius: 3px; overflow: hidden; }
+#breathFill { height: 100%; width: 100%; background: #9ab; transition: background 0.2s; }
+#breathFill.holding { background: #6cf; }
+#breathFill.low { background: #f75; }
+
+#dope { top: 50%; left: 50%; transform: translate(-50%, -50%); max-height: 86vh; overflow: auto; }
+#dope table { border-collapse: collapse; margin-top: 6px; }
+#dope th, #dope td { padding: 1px 9px; text-align: right; }
+#dope th { color: #8fb08f; font-weight: normal; border-bottom: 1px solid rgba(255,255,255,0.2); }
+#dope tr.trans td { color: #fc6; }
+#dope .dh { color: #cde; } #dope .dn { color: #889; margin-top: 6px; max-width: 520px; }
+
+.screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(5, 8, 10, 0.55); }
+.menuBox { background: rgba(12, 16, 14, 0.94); border: 1px solid rgba(160, 200, 160, 0.25); border-radius: 6px;
+  padding: 22px 26px; width: min(1000px, 94vw); max-height: 92vh; overflow: auto; }
+.menuBox.small { width: 320px; text-align: center; }
+h1 { margin: 0 0 16px; letter-spacing: 6px; font-size: 22px; color: #cfe3cf; }
+h2 { margin: 0 0 14px; color: #cfe3cf; }
+.cols { display: grid; grid-template-columns: 1.3fr 1fr; gap: 22px; }
+@media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }
+#missionList { display: grid; gap: 6px; }
+button { font: inherit; color: inherit; background: #1d2621; border: 1px solid #3c4d42; border-radius: 4px;
+  padding: 8px 12px; cursor: pointer; }
+button:hover { background: #26332b; }
+button.primary { background: #3d6b45; border-color: #5b8a63; font-size: 15px; width: 100%; margin: 10px 0; }
+button.primary:hover { background: #4a7d53; }
+.mission { text-align: left; display: flex; flex-direction: column; gap: 2px; }
+.mission small { color: #93a39a; }
+.mission.sel { border-color: #7fc08a; background: #24352a; }
+label { display: grid; grid-template-columns: 120px 1fr auto; align-items: center; gap: 8px; margin: 6px 0; color: #b8c8bd; }
+select, input[type=range] { width: 100%; }
+select { font: inherit; background: #1d2621; color: inherit; border: 1px solid #3c4d42; padding: 4px; }
+output { width: 64px; text-align: right; color: #dfe; }
+#customPanel { border-top: 1px solid #2b3830; margin-top: 8px; padding-top: 6px; }
+.keys { color: #93a39a; margin-top: 8px; columns: 2; font-size: 12px; }
+.keys div { break-inside: avoid; margin: 2px 0; }
+kbd { background: #26312a; border: 1px solid #3c4d42; border-radius: 3px; padding: 0 4px; color: #dfe; }
+.btns { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+.btns button { flex: 1; }
+.big { display: flex; gap: 12px; margin-bottom: 14px; }
+.big div { flex: 1; background: #1a221d; padding: 10px; border-radius: 4px; text-align: center; }
+.big b { display: block; font-size: 26px; color: #cfe3cf; }
+.big span { color: #93a39a; }
+#summaryBody table { width: 100%; border-collapse: collapse; }
+#summaryBody th, #summaryBody td { padding: 3px 6px; text-align: right; border-bottom: 1px solid #222d26; }
+#summaryBody th { color: #8fb08f; font-weight: normal; }
