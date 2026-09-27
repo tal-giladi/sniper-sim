@@ -69,3 +69,11 @@ kbd { background: #26312a; border: 1px solid #3c4d42; border-radius: 3px; paddin
 #summaryBody table { width: 100%; border-collapse: collapse; }
 #summaryBody th, #summaryBody td { padding: 3px 6px; text-align: right; border-bottom: 1px solid #222d26; }
 #summaryBody th { color: #8fb08f; font-weight: normal; }
+
+#coach { top: 12px; left: 50%; transform: translateX(-50%); width: min(560px, 52vw); font-size: 14px; line-height: 1.45;
+  font-family: system-ui, "Segoe UI", sans-serif; border-left: 4px solid #f76; }
+#coach.good { border-left-color: #7f7; }
+#coach .ct { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+#coach.good .ct { color: #9f9; } #coach.bad .ct { color: #f98; }
+#coach .cl { position: relative; padding-left: 14px; margin-top: 3px; color: #e4ebe6; }
+#coach .cl::before { content: "›"; position: absolute; left: 2px; color: #8fb08f; }

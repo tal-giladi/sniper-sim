@@ -16,6 +16,7 @@
     <div id="status" class="panel bl"></div>
     <div id="breath"><div id="breathFill"></div></div>
     <div id="report" class="panel br hidden"></div>
+    <div id="coach" class="panel hidden"></div>
     <div id="dope" class="panel hidden"></div>
   </div>
 
@@ -43,6 +44,7 @@
             <div><kbd>Q E</kbd> level the rifle (cant)</div>
             <div><kbd>F</kbd> laser rangefinder</div>
             <div><kbd>Tab</kbd> data card</div>
+            <div><kbd>H</kbd> shot coach on/off</div>
             <div><kbd>Esc</kbd> pause</div>
           </div>
         </div>
@@ -66,7 +68,8 @@
   </div>
 
   <script type="importmap">
-    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
   </script>
   <script type="module" src="js/main.js"></script>
 </body>

@@ -5,7 +5,9 @@ import {
   GRAIN,
 } from './ballistics.js';
 import { WindField, shearFactor, clockString } from './wind.js';
-import { makeTerrain, buildTerrainMesh, buildTrees } from './terrain.js';
+import { makeTerrain, buildTerrainMesh } from './terrain.js';
+import { buildSky, buildGrass, buildRocksAndBushes, buildForest, buildMountains, grassUniforms, SUN_DIR } from './scenery.js';
+import { coachTips } from './coach.js';
 import { Target } from './targets.js';
 import { MISSIONS, customMission } from './missions.js';
 import { drawOverlay } from './scope.js';
@@ -24,7 +26,7 @@ const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 12000);
 camera.rotation.order = 'YXZ';
 const hemi = new THREE.HemisphereLight(0xdfe9f5, 0x4a4436, 1.1);
 const sun = new THREE.DirectionalLight(0xfff3e0, 1.8);
-sun.position.set(800, 1500, 600);
+sun.position.copy(SUN_DIR).multiplyScalar(2000);
 scene.add(hemi, sun);
 let world = new THREE.Group();
 scene.add(world);
@@ -109,7 +111,14 @@ function startMission(mission, rifleId) {
   const zMin = -(maxDist + 2000), zMax = 900;
   S.terrainMesh = buildTerrainMesh(S.terrain, { zMin, zMax, palette: env.palette, seed });
   world.add(S.terrainMesh);
-  world.add(buildTrees(S.terrain, { zMin, zMax: zMax - 100, palette: env.palette, seed }));
+  const scen = { zMin, zMax: zMax - 100, palette: env.palette, seed };
+  world.add(buildForest(S.terrain, scen));
+  world.add(buildRocksAndBushes(S.terrain, scen));
+  const grass = buildGrass(S.terrain, { maxDist, palette: env.palette, seed, targets: mission.targets });
+  if (grass) world.add(grass);
+  world.add(buildMountains(scen));
+  S.sky = buildSky(env.sky);
+  world.add(S.sky);
 
   S.pressure = stationPressure(env.altitude);
   S.atm = atmosphere(env.tempC, S.pressure, env.humidity);
@@ -144,11 +153,12 @@ function startMission(mission, rifleId) {
   S.turretE = 0; S.turretW = 0;
   S.time = 0; S.lastShot = -99; S.roundsLeft = mission.rounds;
   S.shots = []; S.inflight = []; S.effects = [];
-  S.barrelHeat = 0; S.lrf = null; S.endAt = null;
+  S.barrelHeat = 0; S.lrf = null; S.endAt = null; S.lastLase = null; S.particles = [];
   S.breath = { holding: false, held: 0, oxygen: 1, amp: 1, phase: 0, hb: 0 };
   S.recoil = { t: -10, k: 0, ky: 0 };
   S.scoped = true; S.mag = 10;
   $('report').classList.add('hidden');
+  $('coach').classList.add('hidden');
   $('dope').classList.add('hidden');
   buildDopeCard();
 }
@@ -254,6 +264,23 @@ function fire() {
     if (ang < best) { best = ang; intended = tg; }
   }
   const report = analyze(res, base, intended, tShot, origin, dir, sg, mv);
+  // what the shooter did, for the coach
+  {
+    const c0 = intended.posAt(tShot);
+    const l = Math.hypot(c0.x, c0.z), nx = -c0.x / l, nz = -c0.z / l;
+    const tt = ((c0.x - S.eye.x) * nx + (c0.z - S.eye.z) * nz) / (f.x * nx + f.z * nz);
+    const pt = S.eye.clone().addScaledVector(f, tt);
+    const b = S.breath;
+    report.pre = {
+      aimU: (pt.x - c0.x) * nz - (pt.z - c0.z) * nx,
+      aimV: pt.y - c0.y - intended.center,
+      dialE: S.turretE / 10, dialW: S.turretW / 10,
+      cant: S.cant, cantShiftM: (S.zeroAng + S.turretE * 1e-4) * Math.sin(c) * report.range,
+      holding: b.holding, held: b.held, amp: b.amp, mouse: S.mouseSpeed, heat: S.barrelHeat,
+      slopeDeg: (Math.atan2(c0.y + intended.center - S.eye.y, report.range) * 180) / Math.PI,
+      lase: S.lastLase ? { dist: S.lastLase.dist, age: tShot - S.lastLase.time } : null,
+    };
+  }
   S.inflight.push({ tShot, res, idx: 0, report, n: S.shots.length + S.inflight.length + 1, trail: makeTrail() });
 
   S.barrelHeat += 7 * rifle.recoil;
@@ -305,7 +332,8 @@ function analyze(res, base, tg, tShot, origin, dir, sg, mv) {
     out.mil = mil;
   }
   // miss relative to target centre
-  const cr = crossingOf(tg, path, tShot);
+  const direct = res.impact && res.impact.type === 'target' && res.impact.target === tg ? res.impact : null;
+  const cr = direct || crossingOf(tg, path, tShot);
   let mu = null, mv_ = null;
   if (cr) { mu = cr.u; mv_ = cr.v - tg.center; }
   else {
@@ -401,10 +429,12 @@ function finalizeShot(b) {
   if (imp && imp.type === 'target') {
     const tg = imp.target;
     points = tg.down ? 0 : tg.score(imp.u, imp.v);
+    rep.zone = tg.zoneName(imp.u, imp.v);
     tg.onHit(imp.u, imp.v, points, S.time);
-    if (tg.kind === 'silhouette') spawnPuff(imp, 0xb89a6a, 0.35, 0.8, 3, 0.2);
+    if (tg.kind === 'human') spawnBlood(imp, b.res.path, rep.zone);
+    else if (tg.kind === 'silhouette') spawnPuff(imp, 0xb89a6a, 0.35, 0.8, 3, 0.2);
     else spawnPuff(imp, 0xffffff, 0.25, 0.25, 2, 0);
-    if (tg.kind === 'silhouette') sound.thud(soundDelay, dist); else sound.ping(soundDelay, dist);
+    if (tg.kind === 'silhouette' || tg.kind === 'human') sound.thud(soundDelay, dist); else sound.ping(soundDelay, dist);
   } else if (imp && imp.type === 'ground') {
     const wet = S.mission.env.rain > 0.3;
     spawnPuff(imp, DUST[S.mission.env.palette] || DUST.grass, wet ? 0.9 : 1.6, wet ? 0.9 : 2.2, wet ? 3 : 5);
@@ -414,6 +444,46 @@ function finalizeShot(b) {
   rep.n = S.shots.length + 1;
   S.shots.push(rep);
   showReport(rep);
+  showCoach(rep);
+}
+
+function showCoach(rep) {
+  if (!rep.pre) return;
+  const c = coachTips(rep, S.rifle);
+  const el = $('coach');
+  el.className = 'panel ' + (c.good ? 'good' : 'bad') + (S.coachOff ? ' hidden' : '');
+  el.innerHTML = `<div class="ct">${c.title}</div>` + c.lines.map((l) => `<div class="cl">${l}</div>`).join('');
+}
+
+// Blood spray: droplets thrown out of the exit side, plus a short red mist.
+function spawnBlood(imp, path, zone) {
+  const a = path[Math.max(0, path.length - 3)], z = path[path.length - 1];
+  const d = new THREE.Vector3(z.x - a.x, z.y - a.y, z.z - a.z).normalize();
+  const big = zone === 'head' || zone === 'chest' || zone === 'neck' ? 1.4 : 1;
+  spawnPuff({ x: imp.x + d.x * 0.4, y: imp.y - 0.15, z: imp.z + d.z * 0.4 }, 0x8a0a0a, 0.8 * big, 0.9, 5, 0.1);
+  for (let i = 0; i < 70 * big; i++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: puffTex, color: i % 3 ? 0x7a0000 : 0xa01010, transparent: true, depthWrite: false }));
+    s.position.set(imp.x, imp.y, imp.z);
+    const sp = 1.5 + Math.random() * 5;
+    const v = new THREE.Vector3(d.x * sp + (Math.random() - 0.5) * 2, d.y * sp + Math.random() * 1.8, d.z * sp + (Math.random() - 0.5) * 2);
+    s.scale.setScalar(0.03 + Math.random() * 0.07);
+    world.add(s);
+    S.particles.push({ s, v, t0: S.time, life: 0.5 + Math.random() * 0.7 });
+  }
+}
+
+function updateParticles(dt) {
+  for (let i = S.particles.length - 1; i >= 0; i--) {
+    const p = S.particles[i];
+    const age = S.time - p.t0;
+    if (age > p.life) { world.remove(p.s); p.s.material.dispose(); S.particles.splice(i, 1); continue; }
+    p.v.y -= 9.8 * dt;
+    p.v.multiplyScalar(1 - 1.5 * dt);
+    p.s.position.addScaledVector(p.v, dt);
+    const gy = S.terrain(p.s.position.x, p.s.position.z) + 0.02;
+    if (p.s.position.y < gy) { p.s.position.y = gy; p.v.set(0, 0, 0); }
+    p.s.material.opacity = Math.min(1, 2 * (1 - age / p.life));
+  }
 }
 
 // ---------- HUD ----------
@@ -524,7 +594,10 @@ function laser() {
   const rain = S.mission.env.rain;
   const ang = (S.pitch * 180) / Math.PI;
   if (!hit || (rain > 0.4 && S.rng() < rain * 0.3)) S.lrf = `--- m   ${ang.toFixed(1)}°`;
-  else S.lrf = `${Math.round(hit.distance + gauss(S.rng) * 0.5)} m   ${ang >= 0 ? '+' : ''}${ang.toFixed(1)}°`;
+  else {
+    S.lastLase = { time: S.time, dist: hit.distance };
+    S.lrf = `${Math.round(hit.distance + gauss(S.rng) * 0.5)} m   ${ang >= 0 ? '+' : ''}${ang.toFixed(1)}°`;
+  }
   S.lrfUntil = S.time + 6;
   sound.click();
 }
@@ -553,7 +626,7 @@ function showSummary() {
     <table><tr><th>#</th><th>Range</th><th>Result</th><th>Miss</th><th>TOF</th><th>Wind drift</th></tr>`;
   for (const s of shots) {
     const miss = s.missU != null ? `${fmt(Math.hypot(s.missU, s.missV) * 100, 0)} cm` : '—';
-    html += `<tr><td>${s.n}</td><td>${fmt(s.range, 0)} m</td><td>${s.points > 0 ? 'HIT ' + s.points : 'miss'}</td><td>${miss}</td><td>${fmt(s.tof, 2)} s</td><td>${s.windH != null ? fmt(Math.abs(s.windH) * 100, 0) + ' cm' : '—'}</td></tr>`;
+    html += `<tr><td>${s.n}</td><td>${fmt(s.range, 0)} m</td><td>${s.points > 0 ? 'HIT ' + s.points + (s.zone ? ' · ' + s.zone : '') : 'miss'}</td><td>${miss}</td><td>${fmt(s.tof, 2)} s</td><td>${s.windH != null ? fmt(Math.abs(s.windH) * 100, 0) + ' cm' : '—'}</td></tr>`;
   }
   html += `</table><div class="btns"><button id="again">Retry</button><button id="toMenu">Missions</button></div>`;
   $('summaryBody').innerHTML = html;
@@ -611,6 +684,7 @@ document.addEventListener('keydown', (e) => {
     case 'KeyE': S.cant = Math.min(10, S.cant + 0.25); break;
     case 'KeyZ': S.scoped = !S.scoped; break;
     case 'KeyF': laser(); break;
+    case 'KeyH': S.coachOff = !S.coachOff; $('coach').classList.toggle('hidden', S.coachOff || !S.shots.length); break;
     case 'Tab': $('dope').classList.toggle('hidden'); break;
     case 'PageUp': case 'Equal': case 'NumpadAdd': S.mag = Math.min(25, S.mag + 1); break;
     case 'PageDown': case 'Minus': case 'NumpadSubtract': S.mag = Math.max(5, S.mag - 1); break;
@@ -625,7 +699,7 @@ document.addEventListener('keyup', (e) => {
 // ---------- menu ----------
 let selected = MISSIONS[0];
 const custom = {
-  rifle: '308', kind: 'silhouette', count: 4, minDist: 300, maxDist: 900, moveSpeed: 0,
+  rifle: '308', kind: 'human', count: 4, minDist: 300, maxDist: 900, moveSpeed: 0,
   windSpeed: 4, windDir: 90, gust: 0.3, rain: 0, tempC: 15, altitude: 300, humidity: 0.5,
   slope: 0, latitude: 32, azimuth: 0, cant: 0,
 };
@@ -662,7 +736,7 @@ function renderMenu() {
   cp.classList.toggle('hidden', selected.id !== 'custom');
   if (selected.id === 'custom' && !cp.dataset.built) {
     cp.dataset.built = '1';
-    let html = `<label>Target type <select id="c_kind"><option value="silhouette">Silhouette</option><option value="plate">Steel plate</option><option value="vehicle">Vehicle</option></select></label>`;
+    let html = `<label>Target type <select id="c_kind"><option value="human">Person</option><option value="silhouette">Target board</option><option value="plate">Steel plate</option><option value="vehicle">Vehicle</option></select></label>`;
     for (const [k, label, min, max, step, unit] of SLIDERS) {
       html += `<label>${label} <input type="range" id="c_${k}" min="${min}" max="${max}" step="${step}" value="${custom[k]}"><output id="o_${k}">${custom[k]}${unit}</output></label>`;
     }
@@ -724,6 +798,7 @@ function frame(now) {
       S.mouseSpeed *= Math.exp(-dt * 10);
       S.barrelHeat *= Math.exp(-dt / 150);
       updateInflight();
+      updateParticles(dt);
       checkEnd();
       updateHud(dt);
     }
@@ -733,6 +808,9 @@ function frame(now) {
     applyFov();
     for (const t of S.targets) t.update(S.time);
     updateFlags();
+    grassUniforms.uTime.value = S.time;
+    grassUniforms.uWind.value = S.wind.sample(0, -100, S.time).speed;
+    if (S.sky) S.sky.material.uniforms.time.value = S.time;
     const w = S.wind.sample(0, -60, S.time);
     const cam = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), S.yaw);
     const crossWind = w.x * cam.x + w.z * cam.z;

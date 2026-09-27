@@ -28,10 +28,10 @@ export const MISSIONS = [
     env: { tempC: 26, altitude: 400, humidity: 0.3, wind: { speed: 7, dir: 270, gust: 0.5 }, rain: 0, latitude: 31, azimuth: 110, cant: 1.5, palette: 'desert', sky: 'clear' },
     terrain: { slope: 0, hills: 1.4 },
     targets: [
-      { kind: 'silhouette', dist: 450, x: -10 },
-      { kind: 'silhouette', dist: 620, x: 12 },
-      { kind: 'silhouette', dist: 780, x: -18 },
-      { kind: 'silhouette', dist: 940, x: 20 },
+      { kind: 'human', dist: 450, x: -10 },
+      { kind: 'human', dist: 620, x: 12 },
+      { kind: 'human', dist: 780, x: -18 },
+      { kind: 'human', dist: 940, x: 20 },
     ],
   },
   {
@@ -39,10 +39,10 @@ export const MISSIONS = [
     env: { tempC: 18, altitude: 150, humidity: 0.55, wind: { speed: 2, dir: 30, gust: 0.3 }, rain: 0, latitude: 33, azimuth: 350, cant: 0, palette: 'grass', sky: 'clear' },
     terrain: { slope: 0, hills: 1 },
     targets: [
-      { kind: 'silhouette', dist: 350, x: 0, move: walk(1.4, 18) },
-      { kind: 'silhouette', dist: 500, x: -8, move: walk(1.4, 24, 2.5) },
-      { kind: 'silhouette', dist: 600, x: 10, move: walk(3.2, 30, 1) },
-      { kind: 'silhouette', dist: 720, x: -4, move: walk(1.2, 20, 3) },
+      { kind: 'human', dist: 350, x: 0, move: walk(1.4, 18) },
+      { kind: 'human', dist: 500, x: -8, move: walk(1.4, 24, 2.5) },
+      { kind: 'human', dist: 600, x: 10, move: walk(3.2, 30, 1) },
+      { kind: 'human', dist: 720, x: -4, move: walk(1.2, 20, 3) },
     ],
   },
   {
@@ -50,9 +50,9 @@ export const MISSIONS = [
     env: { tempC: -8, altitude: 2800, humidity: 0.6, wind: { speed: 4, dir: 120, gust: 0.4 }, rain: 0, latitude: 42, azimuth: 200, cant: -2, palette: 'snow', sky: 'clear' },
     terrain: { slope: -0.38, hills: 1.6 },
     targets: [
-      { kind: 'silhouette', dist: 380, x: -6 },
+      { kind: 'human', dist: 380, x: -6 },
       { kind: 'plate', dist: 560, x: 9, size: 0.5 },
-      { kind: 'silhouette', dist: 720, x: -12 },
+      { kind: 'human', dist: 720, x: -12 },
       { kind: 'plate', dist: 850, x: 4, size: 0.6 },
     ],
   },
@@ -62,9 +62,9 @@ export const MISSIONS = [
     terrain: { slope: 0.3, hills: 1.5 },
     targets: [
       { kind: 'plate', dist: 400, x: 5, size: 0.4 },
-      { kind: 'silhouette', dist: 600, x: -9 },
+      { kind: 'human', dist: 600, x: -9 },
       { kind: 'plate', dist: 780, x: 12, size: 0.6 },
-      { kind: 'silhouette', dist: 900, x: -3 },
+      { kind: 'human', dist: 900, x: -3 },
     ],
   },
   {
@@ -72,10 +72,10 @@ export const MISSIONS = [
     env: { tempC: 9, altitude: 300, humidity: 1, wind: { speed: 6.5, dir: 130, gust: 0.75 }, rain: 0.85, latitude: 52, azimuth: 250, cant: 0, palette: 'wet', sky: 'storm' },
     terrain: { slope: 0, hills: 1 },
     targets: [
-      { kind: 'silhouette', dist: 350, x: 6 },
-      { kind: 'silhouette', dist: 480, x: -9, move: walk(1.3, 14, 2) },
+      { kind: 'human', dist: 350, x: 6 },
+      { kind: 'human', dist: 480, x: -9, move: walk(1.3, 14, 2) },
       { kind: 'plate', dist: 620, x: 11, size: 0.6 },
-      { kind: 'silhouette', dist: 750, x: -2 },
+      { kind: 'human', dist: 750, x: -2 },
     ],
   },
   {

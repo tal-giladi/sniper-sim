@@ -24,7 +24,9 @@ A browser-based long-range shooting simulator. No story, no characters — just 
 
 Rifles: 6.5 Creedmoor 140 ELD-M, .308 Win 175 SMK, .338 Lapua 250 Scenar, .50 BMG 750 A-MAX.
 
-After every shot a report breaks down gravity drop, wind drift, spin drift, Coriolis and target movement, plus the correction needed. Press **Tab** for a data card computed for the current atmosphere.
+After every shot a report breaks down gravity drop, wind drift, spin drift, Coriolis and target movement, plus the correction needed. A **shot coach** explains in plain words what went wrong (wind, lead, elevation, incline, cant, breathing, trigger) and what to change. Press **Tab** for a data card computed for the current atmosphere.
+
+Targets: steel plates, target boards, vehicles and people (standing or walking, with head/chest/torso/limb hit zones). Scenery: sky with clouds, grass that moves with the wind, forests, rocks and distant mountains.
 
 ## Controls
 
@@ -41,6 +43,7 @@ After every shot a report breaks down gravity drop, wind drift, spin drift, Cori
 | Q / E | Level the rifle (cant) |
 | F | Laser rangefinder (distance and angle) |
 | Tab | Ballistic data card |
+| H | Shot coach on/off |
 | Esc | Pause |
 
 ## Run locally
@@ -65,4 +68,6 @@ node test/ballistics.test.mjs
 - `js/targets.js` — plates, silhouettes, vehicles, motion and hit zones
 - `js/missions.js` — scenarios
 - `js/scope.js` — reticle and scope overlay
+- `js/scenery.js` — sky, grass, trees, rocks, mountains
+- `js/coach.js` — shot feedback
 - `js/main.js` — game loop, input, HUD
